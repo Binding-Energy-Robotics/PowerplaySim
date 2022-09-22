@@ -2,106 +2,130 @@ import java.lang.Math;
 
 
 public class Robot {
-    double accel;
-    double angaccel;
+    double accelRate;
+    double angAccelRate;
     double velocity;
-    double angvel;
-    double velcap;
-    double angvelcap;
+    double angVel;
+    double velCap;
+    double angVelCap;
     double angle;
     double[] pos;
-    Stategy strat;
-    public double getAccel() {
-        return accel;
+    Strategy strat;
+
+    double[] goalPos;
+    Double goalAngle;
+    Action currentAction;
+    double timeToPickUp;
+    double timeToPlaceGround;
+    double timeToPlaceLower;
+    double timeToPlaceMiddle;
+    double timeToPlaceHigh;
+    public double getAccelRate() {
+        return accelRate;
     }
-    public void setAccel(double accel) {
-        this.accel = accel;
-    }
-    public double getAngaccel() {
-        return angaccel;
-    }
-    public void setAngaccel(double angaccel) {
-        this.angaccel = angaccel;
+    public double getAngAccelRate() {
+        return angAccelRate;
     }
     public double getVelocity() {
         return velocity;
     }
-    public void setVelocity(double velocity) {
-        this.velocity = velocity;
+    public double getAngVel() {
+        return angVel;
     }
-    public double getAngvel() {
-        return angvel;
+    public double getVelCap() {
+        return velCap;
     }
-    public void setAngvel(double angvel) {
-        this.angvel = angvel;
-    }
-    public double getVelcap() {
-        return velcap;
-    }
-    public void setVelcap(double velcap) {
-        this.velcap = velcap;
-    }
-    public double getAngvelcap() {
-        return angvelcap;
-    }
-    public void setAngvelcap(double angvelcap) {
-        this.angvelcap = angvelcap;
+    public double getAngVelCap() {
+        return angVelCap;
     }
     public double getAngle() {
         return angle;
     }
-    public void setAngle(double angle) {
-        this.angle = angle;
-    }
     public double[] getPos() {
         return pos;
     }
-    public void setPos(double[] pos) {
-        this.pos = pos;
+    public double getTimeToPickUp() {
+        return timeToPickUp;
     }
-    public Robot(double a, double vc, double[] position, double aa, double avc, double ang, Stategy s) {
-        accel = a;
-        angaccel = aa;
-        velcap = vc;
-        angvelcap = avc;
+    public double getTimeToPlaceGround() {
+        return timeToPlaceGround;
+    }
+    public double getTimeToPlaceLower() {
+        return timeToPlaceLower;
+    }
+    public double getTimeToPlaceMiddle() {
+        return timeToPlaceMiddle;
+    }
+    public double getTimeToPlaceHigh() {
+        return timeToPlaceHigh;
+    }
+    public void setGoalPos(double[] goalPos) {
+        this.goalPos = goalPos;
+    }
+    public void setGoalAngle(Double goalAngle) {
+        this.goalAngle = goalAngle;
+    }
+
+    public Action getCurrentAction() {
+        return currentAction;
+    }
+
+    public void setCurrentAction(Action currentAction) {
+        this.currentAction = currentAction;
+    }
+
+    public Robot(double a, double vc, double[] position, double aa, double avc, double ang, Strategy s) {
+        accelRate = a;
+        angAccelRate = aa;
+        velCap = vc;
+        angVelCap = avc;
         pos = position;
         angle = ang;
         strat = s;
 
-        velocity = 0;
-        angvel = 0;
+        velocity = velCap;
+        angVel = angVelCap;
+        currentAction = null;
+        goalPos = null;
+        goalAngle = null;
     }
-    public void Move(double[] goalpos, double goalang) {
+    public void move() {
         // For now we don't actually care about acceleration
         // this assumes that we take a second
         // First, change the angle
-        if (angle < goalang) {
-            if (goalang - angle < angvelcap) {
-                angle = goalang;
+        if (angle < goalAngle) {
+            if (goalAngle - angle < angVelCap) {
+                angle = goalAngle;
             }
             else {
-                angle += angvelcap;
+                angle += angVelCap;
             }
         }
         else {
-            if (angle - goalang < angvelcap) {
-                angle = goalang;
+            if (angle - goalAngle < angVelCap) {
+                angle = goalAngle;
             }
             else {
-                angle -= angvelcap;
+                angle -= angVelCap;
             }
         }
         // Next, determine angle we need to travel at
-        double dy = goalpos[1] - pos[1];
-        double dx = goalpos[0] - pos[0];
+        double dy = goalPos[1] - pos[1];
+        double dx = goalPos[0] - pos[0];
         double ang = Math.atan2(dy, dx);
-        double[] changes = {Math.cos(ang), Math.sin(ang)};
+        double distanceTo = Math.sqrt(Math.pow(dx, 2) + Math.pow(dy, 2));
+        if (distanceTo < velocity) {
+            // just go there, don't worry about deacceleration.
+            pos = goalPos;
+            return;
+        }
+        double[] changes = {Math.cos(ang) * velocity, Math.sin(ang) * velocity};
         pos[0] += changes[0];
         pos[1] += changes[1];
 
     }
-    public Action DecideAction(Simulation state) {
-        return strat.run(this, state);
+    public Action decideAction() {
+        return strat.run(this);
     }
 
 }
