@@ -1,3 +1,6 @@
-public abstract class Action {
-
+public enum Action {
+    Move,
+    PickupCone,
+    PlaceCone,
+    PlaceBeacon,
 }
