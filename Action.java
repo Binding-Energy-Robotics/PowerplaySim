@@ -1,5 +1,5 @@
 public abstract class Action {
-    private double timeLeft;
+    protected double timeLeft;
     public boolean updateTimeLeft(double timeStep) {
         timeLeft -= timeStep;
         return (timeLeft < 0);
