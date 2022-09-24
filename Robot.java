@@ -27,6 +27,8 @@ public class Robot {
     double timeToPlaceLower;
     double timeToPlaceMiddle;
     double timeToPlaceHigh;
+
+    double[] subStationPos;
     public double getAccelRate() {
         return accelRate;
     }
@@ -66,6 +68,9 @@ public class Robot {
     public double getTimeToPlaceHigh() {
         return timeToPlaceHigh;
     }
+    public double[] getGoalPos() {
+        return goalPos;
+    }
     public void setGoalPos(double[] goalPos) {
         this.goalPos = goalPos;
     }
@@ -89,14 +94,18 @@ public class Robot {
     public void setCurrentAction(Action currentAction) {
         this.currentAction = currentAction;
     }
+    public double[] getSubStationPos() {
+        return subStationPos;
+    }
 
-    public Robot(double a, double vc, double[] position, double aa, double avc, double ang, Strategy s) {
+    public Robot(double a, double vc, double[] position, double aa, double avc, double ang, double[] station, Strategy s) {
         accelRate = a;
         angAccelRate = aa;
         velCap = vc;
         angVelCap = avc;
         pos = position;
         angle = ang;
+        subStationPos = station;
         strat = s;
 
         velocity = velCap;
