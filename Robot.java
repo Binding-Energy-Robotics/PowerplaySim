@@ -2,6 +2,11 @@ import java.lang.Math;
 
 
 public class Robot {
+    public enum Team {
+        One,
+        Two,
+    }
+
     double accelRate;
     double angAccelRate;
     double velocity;
@@ -11,6 +16,8 @@ public class Robot {
     double angle;
     double[] pos;
     Strategy strat;
+    Team team;
+    JunctionItem itemHeld;
 
     double[] goalPos;
     Double goalAngle;
@@ -65,6 +72,15 @@ public class Robot {
     public void setGoalAngle(Double goalAngle) {
         this.goalAngle = goalAngle;
     }
+    public Team getTeam() {
+        return team;
+    }
+    public JunctionItem getItemHeld() {
+        return itemHeld;
+    }
+    public void setItemHeld(JunctionItem itemHeld) {
+        this.itemHeld = itemHeld;
+    }
 
     public Action getCurrentAction() {
         return currentAction;
@@ -88,6 +104,7 @@ public class Robot {
         currentAction = null;
         goalPos = null;
         goalAngle = null;
+        itemHeld = null;
     }
     public void move() {
         // For now we don't actually care about acceleration

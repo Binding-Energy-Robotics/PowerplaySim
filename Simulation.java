@@ -8,6 +8,8 @@ public class Simulation {
     static Robot robotOne;
     static Robot robotTwo;
     static float time;
+    static int numRobotOneCones;
+    static int numRobotTwoCones;
     private static void fillInGameState() {
         // I just think this should be a function so that way we can collapse it later.
         junctions = new Junction[25];
@@ -30,7 +32,8 @@ public class Simulation {
                 junctions[(int)(i-1) * 5 + (int)j - 1] = new Junction(pos, level);
             }
         }
-
+        numRobotOneCones = 30;
+        numRobotTwoCones = 30;
     }
     private static void genRobotOne() {
         double accelRate = 0.0;
@@ -115,5 +118,12 @@ public class Simulation {
 
     public static boolean isEndgame() {
         return (time > 120);
+    }
+    public static void giveRobotCone(Robot r) throws Exception {
+        if (r.getTeam() == Robot.Team.One) {
+            if (numRobotOneCones == 0) {
+                throw new Exception("We didn't check the number of cones left");
+            }
+        }
     }
 }
