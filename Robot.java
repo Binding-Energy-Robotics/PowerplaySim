@@ -91,7 +91,10 @@ public class Robot {
     }
     public void move() {
         // For now we don't actually care about acceleration
-        // this assumes that we take a second
+        // This is just a hack until we implement acceleration.
+        velocity = velCap;
+        angVel = angVelCap;
+
         // First, change the angle
         if (angle < goalAngle) {
             if (goalAngle - angle < angVelCap) {
@@ -119,7 +122,7 @@ public class Robot {
             pos = goalPos;
             return;
         }
-        double[] changes = {Math.cos(ang) * velocity, Math.sin(ang) * velocity};
+        double[] changes = {Math.cos(ang) * velocity * Simulation.getTimeStep(), Math.sin(ang) * velocity * Simulation.getTimeStep()};
         pos[0] += changes[0];
         pos[1] += changes[1];
 
@@ -128,5 +131,11 @@ public class Robot {
         return strat.run(this);
     }
 
+    public String toString() {
+        String s = "Current Velocity: %f, ".formatted(velocity);
+        s += "Current Angle: %f, ".formatted(angle);
+        s += "Current Position: (%f,%f)".formatted(pos[0], pos[1]);
+        return s;
+    }
 }
 
