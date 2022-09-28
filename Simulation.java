@@ -37,6 +37,7 @@ public class Simulation {
             return pickUpCone;
         }
         if (robot.getItemHeld() == null) {
+            System.out.println("Here");
             robot.setGoalPos(robot.getSubStationPos());
             // This should work
             if (robot.getGoalPos()[0] < 3 * gridSquareSize) {
@@ -45,6 +46,7 @@ public class Simulation {
             else {
                 robot.setGoalAngle(0.0);
             }
+            System.out.println("and Here?");
         }
         else {
             Stream<Junction> targets = Arrays.stream(junctions).filter(junction -> junction.getTop().team.equals(robot.getTeam()));
@@ -92,7 +94,8 @@ public class Simulation {
         double angVelCap = Math.PI/2;
         double angle = 0.0; // should be facing straight right
         Strategy robotOneStrat = moveToClosestCone;
-        robotOne = new Robot(accelRate, velCap, pos, angAccelRate, angVelCap, angle, subPos, robotOneStrat);
+        Robot.Team team = Robot.Team.One;
+        robotOne = new Robot(accelRate, velCap, pos, angAccelRate, angVelCap, angle, subPos, robotOneStrat, team);
     }
     private static void genRobotTwo() {
         double accelRate = 0.0;
@@ -104,7 +107,8 @@ public class Simulation {
         double angVelCap = Math.PI/2;
         double angle = Math.PI; // should be facing straight left
         Strategy robotTwoStrat = moveToClosestCone;
-        robotTwo = new Robot(accelRate, velCap, pos, angAccelRate, angVelCap, angle, subPos, robotTwoStrat);
+        Robot.Team team = Robot.Team.Two;
+        robotTwo = new Robot(accelRate, velCap, pos, angAccelRate, angVelCap, angle, subPos, robotTwoStrat, team);
     }
     public static void main(String[] args) {
         genRobotOne();
