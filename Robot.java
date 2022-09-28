@@ -1,3 +1,5 @@
+import org.jetbrains.annotations.NotNull;
+
 import java.lang.Math;
 
 
@@ -68,13 +70,16 @@ public class Robot {
     public double getTimeToPlaceHigh() {
         return timeToPlaceHigh;
     }
+    public double[] getGoalPos() {
+        return goalPos;
+    }
     public void setGoalPos(double[] goalPos) {
         this.goalPos = goalPos;
     }
     public void setGoalAngle(Double goalAngle) {
         this.goalAngle = goalAngle;
     }
-    public Team getTeam() {
+    @NotNull public Team getTeam() {
         return team;
     }
     public JunctionItem getItemHeld() {
@@ -95,7 +100,7 @@ public class Robot {
         return subStationPos;
     }
 
-    public Robot(double a, double vc, double[] position, double aa, double avc, double ang, double[] station, Strategy s) {
+    public Robot(double a, double vc, double[] position, double aa, double avc, double ang, double[] station, Strategy s, @NotNull Robot.Team t) {
         accelRate = a;
         angAccelRate = aa;
         velCap = vc;
@@ -104,6 +109,7 @@ public class Robot {
         angle = ang;
         subStationPos = station;
         strat = s;
+        team = t;
 
         velocity = velCap;
         angVel = angVelCap;

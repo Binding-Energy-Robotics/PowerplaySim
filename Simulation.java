@@ -1,4 +1,15 @@
 import org.jetbrains.annotations.NotNull;
+import org.jetbrains.annotations.Nullable;
+
+import java.util.Arrays;
+import java.util.Comparator;
+import java.util.Optional;
+import java.util.stream.Stream;
+
+import java.util.Arrays;
+import java.util.Comparator;
+import java.util.Optional;
+import java.util.stream.Stream;
 
 import java.util.Arrays;
 import java.util.Comparator;
@@ -30,20 +41,28 @@ public class Simulation {
         if (pickUpCone != null) {
             return pickUpCone;
         }
-        if (robot.itemHeld == null) {
-            robot.goalPos = robot.subStationPos;
-            return null;
+        if (robot.getItemHeld() == null) {
+            System.out.println("Here");
+            robot.setGoalPos(robot.getSubStationPos());
+            // This should work
+            if (robot.getGoalPos()[0] < 3 * gridSquareSize) {
+                robot.setGoalAngle(Math.PI);
+            }
+            else {
+                robot.setGoalAngle(0.0);
+            }
+            System.out.println("and Here?");
         }
         else {
-            Stream<Junction> targets = Arrays.stream(junctions).filter(junction -> junction.getTop().team != robot.team);
+            Stream<Junction> targets = Arrays.stream(junctions).filter(junction -> junction.getTop().team.equals(robot.getTeam()));
             // Find minimum distance to the robot.
-            Junction target = targets.min(Comparator.comparing(Junction::getPos, (p1, p2) -> {
-                return Double.compare(Math.hypot(p1[0] - robot.getPos()[0], p1[1] - robot.goalPos[1]),
-                        Math.hypot(p1[0] - robot.getPos()[0], p1[1] - robot.goalPos[1]));
-            })).orElse(null);
-            robot.goalPos = target.getPos();
-            return null;
+            Junction target = targets.min(Comparator.comparing(Junction::getPos, Comparator.comparingDouble(
+                    p -> Math.hypot(p[0] - robot.getPos()[0], p[1] - robot.getGoalPos()[1])))).orElse(null);
+            robot.setGoalPos(target.getPos());
+            // Calculate goal angle.
+            robot.setGoalAngle(Math.atan2(target.getPos()[0] - robot.getGoalPos()[0], target.getPos()[1] - robot.getGoalPos()[1]));
         }
+        return null;
     };
     private static void fillInGameState() {
         // I just think this should be a function so that way we can collapse it later.
@@ -79,8 +98,9 @@ public class Simulation {
         double angAccelRate = 0.0;
         double angVelCap = Math.PI/2;
         double angle = 0.0; // should be facing straight right
-        Strategy robotOneStrat = moveToZero;
-        robotOne = new Robot(accelRate, velCap, pos, angAccelRate, angVelCap, angle, subPos, robotOneStrat);
+        Strategy robotOneStrat = moveToClosestCone;
+        Robot.Team team = Robot.Team.One;
+        robotOne = new Robot(accelRate, velCap, pos, angAccelRate, angVelCap, angle, subPos, robotOneStrat, team);
     }
     private static void genRobotTwo() {
         double accelRate = 0.0;
@@ -91,8 +111,9 @@ public class Simulation {
         double angAccelRate = 0.0;
         double angVelCap = Math.PI/2;
         double angle = Math.PI; // should be facing straight left
-        Strategy robotTwoStrat = moveToZero;
-        robotTwo = new Robot(accelRate, velCap, pos, angAccelRate, angVelCap, angle, subPos, robotTwoStrat);
+        Strategy robotTwoStrat = moveToClosestCone;
+        Robot.Team team = Robot.Team.Two;
+        robotTwo = new Robot(accelRate, velCap, pos, angAccelRate, angVelCap, angle, subPos, robotTwoStrat, team);
     }
     public static void main(String[] args) {
         genRobotOne();
@@ -148,34 +169,42 @@ public class Simulation {
     public static boolean isEndgame() {
         return (time > 120);
     }
-    public static Action tryGiveRobotCone(Robot r) {
-        if (r.getPos() != r.getSubStationPos()) {
-            return false;
+    public static @Nullable Action tryGiveRobotCone(@NotNull Robot r) {
+        if (!Arrays.equals(r.getPos(), r.getSubStationPos())) {
+            return null;
         }
-        if (r.getTeam() == Robot.Team.One) {
+        if (r.getTeam().equals(Robot.Team.One)) {
             if (numRobotOneCones == 0) {
-                return false;
+                return null;
             }
             numRobotOneCones -= 1;
             r.itemHeld = JunctionItem.TeamOneCone;
         }
         else {
             if (numRobotTwoCones == 0) {
-                return false;
+                return null;
             }
         }
-        return true;
+        return new PickupCone(r.timeToPickUp);
     }
-    public static Action tryRobotPlaceCone(Robot r) {
+    public static @Nullable Action tryRobotPlaceCone(Robot r) {
         Stream<Junction> js = Arrays.stream(junctions);
-        Optional<Junction> j = js.filter(junc -> junc.getPos() == r.getPos()).findFirst(); // Should only give back one
+        Optional<Junction> j = js.filter(junc -> Arrays.equals(junc.getPos(), r.getPos())).findFirst(); // Should only give back one
         if (j.isPresent() && r.getItemHeld() != null) {
-            j.get().addItem(r.getItemHeld());
+            double time;
+            JunctionItem item = r.getItemHeld();
             r.setItemHeld(null);
-            return true;
+            switch (j.get().getLevel()) {
+                case Ground -> time = r.getTimeToPlaceGround();
+                case Low -> time = r.getTimeToPlaceLower();
+                case Middle -> time = r.getTimeToPlaceMiddle();
+                case High -> time = r.getTimeToPlaceHigh();
+                default -> throw new RuntimeException("Hi there this should never happen");
+            }
+            return new PlaceCone(time, item, j.get());
         }
         else {
-            return false;
+            return null;
         }
     }
 }
