@@ -5,3 +5,4 @@ pub mod robot;
 pub mod team;
 pub mod pos;
 pub mod action;
+pub mod strategy;
