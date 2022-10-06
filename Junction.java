@@ -42,7 +42,7 @@ public class Junction {
                 items.push(j);
             }
         }
-        return false;
+        return true;
     }
 
     public double[] getPos() {

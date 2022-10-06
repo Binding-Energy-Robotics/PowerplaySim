@@ -16,6 +16,15 @@ pub enum JunctionItem {
     Beacon(Team),
 }
 
+impl std::fmt::Display for JunctionItem {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        match self {
+            &JunctionItem::Beacon(t) => write!(f, "{}'s beacon", t),
+            &JunctionItem::Cone(t) => write!(f, "{}'s cone", t),  
+        }
+    }
+}
+
 pub struct Junction {
     items: VecDeque<JunctionItem>,
     pos: Pos,
@@ -62,6 +71,12 @@ impl Junction {
 
 impl std::fmt::Display for Junction {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
-        writeln!(f, "Level: {:#?}, Top item: {:#?}, Capped: {}", self.level, self.items.back(), self.capped)
+        write!(f, "Level: {:#?}, Top item: {:#?}, Capped: {}", self.level, self.items.back(), self.capped)
+    }
+}
+
+impl std::fmt::Debug for Junction {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        write!(f, "{}", self)
     }
 }
