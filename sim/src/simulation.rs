@@ -1,9 +1,11 @@
-use crate::{junction::{Junction, Level}, robot::{Robot, RobotInner}, pos::Pos, action::Action, team::Team};
+use std::rc::Rc;
+
+use crate::{junction::{Junction, Level, JunctionItem}, robot::{Robot, RobotInner}, pos::Pos, action::Action, team::Team};
 
 pub struct SimState {
     pub grid_square_size: f64,
     pub time_step: f64,
-    pub junctions: Vec<Junction>,
+    pub junctions: Vec<Rc<Junction>>,
     pub time: f64,
     pub num_team_one_cones: i8,
     pub num_team_two_cones: i8,
@@ -32,15 +34,36 @@ impl SimState {
                                 Level::High
                             }
                         };
-                        let i = i as usize;
-                        let j = j as usize;
-                        js.push(Junction::new(pos, level));
+                        js.push(Rc::new(Junction::new(pos, level)));
                     }
                 }
                 js
             }, 
             time: 0.0, num_team_one_cones: 30, num_team_two_cones: 30
         }
+    }
+    pub fn can_give_cone(&self, r: &RobotInner) -> bool {
+        r.get_pos().is_approx_eq(r.get_substation()) && match r.get_team() {
+            Team::TeamOne => self.num_team_one_cones > 0,
+            Team::TeamTwo => self.num_team_two_cones > 0,
+        }
+    }
+    pub fn can_place_item(&self, r: &RobotInner) -> (bool, Option<Rc<Junction>>) {
+        match self.junctions.iter().filter(|j| !j.is_capped()).filter(|j| j.get_pos().is_approx_eq(r.get_pos())).next() {
+            Some(j) => (r.get_item().is_some(), Some(Rc::clone(&j))),
+            None => (false, None)
+        }
+
+    }
+    pub fn junctions(&mut self) -> &mut Vec<Rc<Junction>> {
+        &mut self.junctions
+    }
+    pub fn closest_junction(&self, r: &RobotInner) -> Rc<Junction> {
+        self.junctions.iter().filter(|j| match j.get_top_unmut() {
+            None => true,
+            Some(item) => item.team() != r.get_team(),
+        }).min_by(|x, y| (x.get_pos().distance_from(r.get_pos()))
+        .partial_cmp(&y.get_pos().distance_from(r.get_pos())).unwrap()).unwrap().clone()
     }
 }
 
@@ -80,9 +103,12 @@ impl Simulation {
         Simulation { robot_one: one, robot_two: two, state: SimState::new(grid_square_size, time_step)}
     }
     pub fn print_short(&self) {
-        println!("robot one angle and position: {} @ {}, robot two angle and position: {} @ {}", 
+        println!("robot one angle and position: {} @ {}, robot two angle and position: {} @ {},
+        num cones: {}, {}", 
         self.robot_one.inner.get_angle(), self.robot_one.inner.get_pos(), 
-        self.robot_two.inner.get_angle(), self.robot_two.inner.get_pos());
+        self.robot_two.inner.get_angle(), self.robot_two.inner.get_pos(),
+        self.state.num_team_one_cones, self.state.num_team_two_cones);
+        //println!("Robot one: {}", self.robot_one);
     }
     pub fn run(&mut self) {
         while self.state.time < 150.0 {
@@ -90,6 +116,10 @@ impl Simulation {
             self.step();
             self.state.time += self.state.time_step;
         }
+    }
+    pub fn score(&self) -> i32 {
+        // uhh idk scores just add
+        self.state.junctions.iter().sum()
     }
     pub fn step(&mut self) {
         let mut step_robot = | r: &mut Robot | {
@@ -102,8 +132,9 @@ impl Simulation {
                     // If it's still None, it means that the robot wants to move
                     r.inner.r#move(self.state.time_step);
                 },
-                Some(a) => {
-                    if a.update_time_left(self.state.time_step) {
+                Some(_a) => {
+                    if _a.update_time_left(self.state.time_step) {
+                        let a = r.action.take().unwrap();
                         a.do_action(&mut r.inner, &mut self.state);
                     }
                 }

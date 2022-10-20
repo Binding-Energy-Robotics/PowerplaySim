@@ -1,4 +1,5 @@
 #![feature(fn_traits)]
+#![feature(get_mut_unchecked)]
 pub mod simulation;
 pub mod junction;
 pub mod robot;
@@ -69,4 +70,13 @@ mod tests {
             p1.assert_approx_eq(p2);
         }
     }
+    #[test]
+    fn approx_eq_reflexivity() {
+        let mut rng = rand::thread_rng();
+        for _ in 0..(rng.gen::<usize>() % 900 + 100) {
+            let p1 = Pos::new(rng.gen::<f64>() * 100.0, rng.gen::<f64>() * 100.0);
+            p1.assert_approx_eq(p1.clone());
+        }
+    }
 }
+

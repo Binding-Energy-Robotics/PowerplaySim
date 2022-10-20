@@ -1,4 +1,4 @@
-use crate::{team::Team, pos::Pos, junction::JunctionItem, simulation::{Simulation, SimState}, action::Action};
+use crate::{team::Team, pos::Pos, junction::{JunctionItem, Junction, Level}, simulation::{Simulation, SimState}, action::Action};
 
 pub struct RobotInner {
     team: Team,
@@ -69,6 +69,32 @@ impl RobotInner {
     }
     pub fn get_angle(&self) -> f64 {
         self.angle
+    }
+    pub fn get_team(&self) -> Team {
+        self.team
+    }
+    pub fn give_item(&mut self, item: JunctionItem) {
+        self.item_held = Some(item);
+    }
+    pub fn get_item(&self) -> &Option<JunctionItem> {
+        &self.item_held
+    }
+    pub fn take_item(&mut self) -> Option<JunctionItem> {
+        self.item_held.take()
+    }
+    pub fn get_substation(&self) -> Pos {
+        self.sub_station_pos
+    }
+    pub fn get_time_pick_up(&self) -> f64 {
+        self.time_to_pick_up
+    }
+    pub fn get_time(&self, l: Level) -> f64 {
+        match l {
+            Level::Ground => self.time_to_place_ground,
+            Level::Low => self.time_to_place_lower,
+            Level::Middle => self.time_to_place_middle,
+            Level::High => self.time_to_place_high,
+        }
     }
 }
 

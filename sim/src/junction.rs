@@ -2,7 +2,7 @@ use std::collections::VecDeque;
 
 use crate::{team::Team, pos::Pos};
 
-#[derive(Debug)]
+#[derive(Clone, Copy, Debug)]
 pub enum Level {
     Ground,
     Low,
@@ -25,6 +25,15 @@ impl std::fmt::Display for JunctionItem {
     }
 }
 
+impl JunctionItem {
+    pub fn team(&self) -> Team {
+        match self {
+            &JunctionItem::Beacon(t) => t,
+            &JunctionItem::Cone(t) => t,
+        }
+    }  
+}
+
 pub struct Junction {
     items: VecDeque<JunctionItem>,
     pos: Pos,
@@ -38,6 +47,9 @@ impl Junction {
     }
     pub fn get_top(&mut self) -> Option<&mut JunctionItem> {
         self.items.back_mut()
+    }
+    pub fn get_top_unmut(&self) -> Option<&JunctionItem> {
+        self.items.back()
     }
     pub fn add_item(&mut self, j: JunctionItem) -> bool {
         if self.capped {
@@ -67,6 +79,9 @@ impl Junction {
     pub fn get_level(&self) -> &Level {
         &self.level
     }
+    pub fn is_capped(&self) -> bool {
+        self.capped
+    }
 }
 
 impl std::fmt::Display for Junction {
@@ -80,3 +95,4 @@ impl std::fmt::Debug for Junction {
         write!(f, "{}", self)
     }
 }
+
