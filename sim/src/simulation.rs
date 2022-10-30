@@ -82,6 +82,7 @@ pub struct Simulation {
     robot_one: Robot,
     robot_two: Robot,
     state: SimState,
+    scores: (u32, u32),
 }
 
 impl Simulation {
@@ -97,10 +98,10 @@ impl Simulation {
             robot_two: Robot::new(r2s, RobotInner::new(r2ar, r2vc, Pos::new(3.0 * grid_square_size, 6.0 * grid_square_size), 
             r2aar, r2avc, std::f64::consts::PI, Pos::new(3.0 * grid_square_size, 6.0 * grid_square_size), Team::TeamTwo, 
             r2ttpu, r2ttpg, r2ttpl, r2ttpm, r2ttph)), 
-            state: SimState::new(grid_square_size, time_step)}
+            state: SimState::new(grid_square_size, time_step), scores: (0,0)}
     }
     pub fn new_with_robots(grid_square_size: f64, time_step: f64, one: Robot, two: Robot) -> Simulation {
-        Simulation { robot_one: one, robot_two: two, state: SimState::new(grid_square_size, time_step)}
+        Simulation { robot_one: one, robot_two: two, state: SimState::new(grid_square_size, time_step), scores: (0,0)}
     }
     pub fn print_short(&self) {
         println!("robot one angle and position: {} @ {}, robot two angle and position: {} @ {},
@@ -113,13 +114,47 @@ impl Simulation {
     pub fn run(&mut self) {
         while self.state.time < 150.0 {
             self.print_short();
+            let before_driver = self.state.time < 30.0;
             self.step();
             self.state.time += self.state.time_step;
+            if before_driver && self.state.time > 30.0 {
+                // Now we;re in driver-controlled period, sum up scores.
+                //self.scores = self.scores();
+            }
         }
     }
-    pub fn score(&self) -> i32 {
+    pub fn scores(&self) -> (u32, u32) {
         // uhh idk scores just add
-        self.state.junctions.iter().sum()
+        let folder = |acc: u32, e: &Rc<Junction>, team: Team| {
+            acc + if let Some(item) = e.get_top_unmut() {
+                match item {
+                    &JunctionItem::Beacon(t) => {
+                        if t == team {
+                            10 // I think?
+                        } else {
+                            0
+                        }
+                    },
+                    &JunctionItem::Cone(t) => {
+                         if t == team {
+                            match e.get_level() {
+                                &Level::Ground => 2,
+                                &Level::Low => 3,
+                                &Level::Middle => 4,
+                                &Level::High => 5,
+                            }
+                         } else {
+                            0
+                         }
+                    },
+                }
+            }
+            else {
+                0
+            }
+        };
+        (self.state.junctions.iter().fold(0,  |acc, e| folder(acc, e, Team::TeamOne)), 
+        self.state.junctions.iter().fold(0,  |acc, e| folder(acc, e, Team::TeamTwo)))
     }
     pub fn step(&mut self) {
         let mut step_robot = | r: &mut Robot | {
@@ -142,6 +177,9 @@ impl Simulation {
         };
         step_robot(&mut self.robot_one);
         step_robot(&mut self.robot_two);
+    }
+    pub fn state(&self) -> &SimState {
+        &self.state
     }
 }
 

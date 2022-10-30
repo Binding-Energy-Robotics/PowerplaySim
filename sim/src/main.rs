@@ -47,5 +47,7 @@ fn main() {
     let mut sim = Simulation::new_with_robots(GRID_SQUARE_SIZE, TIME_STEP, robot_one, robot_two);
     sim.run();
     println!("---------------------------------------");
-    println!("Final sim state: {}", sim);
+    println!("Final junction state: {:#?}", sim.state().junctions);
+    let scores = sim.scores();
+    println!("Final scores: {} to {}", scores.0, scores.1);
 }
