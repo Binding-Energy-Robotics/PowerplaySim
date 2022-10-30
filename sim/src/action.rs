@@ -22,7 +22,7 @@ impl PlaceItem {
 
 impl Display for PlaceItem {
     fn fmt(&self, f: &mut Formatter<'_>) -> Result {
-        write!(f, "Time left: {}, item to be placed: {}", self.time_left, self.item)
+        write!(f, "Place Item, time left: {}, item to be placed: {}", self.time_left, self.item)
     }
 }
 
@@ -48,7 +48,7 @@ impl PickUpCone {
 
 impl Display for PickUpCone {
     fn fmt(&self, f: &mut Formatter<'_>) -> Result {
-        write!(f, "Time left: {}", self.time_left)
+        write!(f, "Pick Up Cone, time left: {}", self.time_left)
     }
 }
 

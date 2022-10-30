@@ -29,11 +29,18 @@ impl RobotInner {
                 time_to_pick_up: ttpu, time_to_place_ground: ttpg, time_to_place_lower: ttpl, time_to_place_middle: ttpm, 
                 time_to_place_high: ttph, sub_station_pos: station }
     }
+    pub fn get_goal_pos(&self) -> &Option<Pos> {
+        &self.goal_pos
+    }
     pub fn set_goal_pos(&mut self, p: Pos) {
         self.goal_pos = Some(p);
     }
     pub fn set_goal_angle(&mut self, ang: f64) {
         self.goal_angle = Some(ang);
+    }
+    pub fn clear_goal(&mut self) {
+        self.goal_pos = None;
+        self.goal_angle = None;
     }
     pub fn r#move(&mut self, timestep: f64) {
         // For now we don't actually care about acceleration

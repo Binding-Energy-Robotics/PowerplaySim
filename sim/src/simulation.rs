@@ -113,7 +113,7 @@ impl Simulation {
     }
     pub fn run(&mut self) {
         while self.state.time < 150.0 {
-            self.print_short();
+            //self.print_short();
             let before_driver = self.state.time < 30.0;
             self.step();
             self.state.time += self.state.time_step;
@@ -157,6 +157,7 @@ impl Simulation {
         self.state.junctions.iter().fold(0,  |acc, e| folder(acc, e, Team::TeamTwo)))
     }
     pub fn step(&mut self) {
+        println!("-------------------");
         let mut step_robot = | r: &mut Robot | {
             if let None = r.action {
                 let a = (r.strat)(&mut r.inner, &mut self.state);
@@ -168,9 +169,14 @@ impl Simulation {
                     r.inner.r#move(self.state.time_step);
                 },
                 Some(_a) => {
+                    println!("Robot current action: {}", _a);
                     if _a.update_time_left(self.state.time_step) {
+                        println!("Fufilling robot action");
                         let a = r.action.take().unwrap();
                         a.do_action(&mut r.inner, &mut self.state);
+                        // Now that we don't have an action, we will have to decide a movement on the next step. 
+                        // Therefore, we should reset the robot's goal.
+                        r.inner.clear_goal();
                     }
                 }
             }
