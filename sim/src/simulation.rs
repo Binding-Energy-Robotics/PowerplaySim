@@ -97,7 +97,7 @@ pub struct Simulation {
     robot_two: Robot,
     state: SimState,
     rand: ThreadRng,
-    scores: (u32, u32),
+    scores: ((u32, (u32, u32, u32, u32)), (u32, (u32, u32, u32, u32))),
 }
 
 impl Simulation {
@@ -113,10 +113,11 @@ impl Simulation {
             robot_two: Robot::new(r2s, RobotInner::new(r2ar, r2vc, Pos::new(3.0 * grid_square_size, 6.0 * grid_square_size), 
             r2aar, r2avc, std::f64::consts::PI, Pos::new(3.0 * grid_square_size, 6.0 * grid_square_size), Team::TeamTwo, 
             r2ttpu, r2ttpg, r2ttpl, r2ttpm, r2ttph)), 
-            state: SimState::new(grid_square_size, time_step), rand: thread_rng(), scores: (0,0)}
+            state: SimState::new(grid_square_size, time_step), rand: thread_rng(), scores: ((0, (0,0,0,0)),(0, (0,0,0,0)))}
     }
     pub fn new_with_robots(grid_square_size: f64, time_step: f64, one: Robot, two: Robot) -> Simulation {
-        Simulation { robot_one: one, robot_two: two, state: SimState::new(grid_square_size, time_step), rand: thread_rng(), scores: (0,0)}
+        Simulation { robot_one: one, robot_two: two, state: SimState::new(grid_square_size, time_step), rand: thread_rng(), 
+            scores: ((0, (0,0,0,0)),(0, (0,0,0,0)))}
     }
     pub fn print_short(&self) {
         println!("robot one angle and position: {} @ {}, robot two angle and position: {} @ {},
@@ -133,10 +134,17 @@ impl Simulation {
             self.step();
             self.state.time += self.state.time_step;
             if before_driver && self.state.time > 30.0 {
-                // Now we;re in driver-controlled period, sum up scores.
+                //Now we;re in driver-controlled period, sum up scores.
                 //self.scores = self.scores();
             }
         }
+        /* 
+        let driver_scores = self.scores();
+        self.scores = ((self.scores.0.0 + driver_scores.0.0, (self.scores.0.1.0 + driver_scores.0.1.0, self.scores.0.1.1 + driver_scores.0.1.1, 
+            self.scores.0.1.2 + driver_scores.0.1.2, self.scores.0.1.3 + driver_scores.0.1.3)), 
+        (self.scores.1.0 + driver_scores.1.0, (self.scores.1.1.0 + driver_scores.1.1.0, self.scores.1.1.1 + driver_scores.1.1.1, 
+            self.scores.0.1.2 + driver_scores.1.1.2, self.scores.1.1.3 + driver_scores.1.1.3)));
+        */
     }
     pub fn scores(&self) -> ((u32, (u32, u32, u32, u32)), (u32, (u32, u32, u32, u32))) {
         // uhh idk scores just add

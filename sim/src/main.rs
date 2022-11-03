@@ -37,13 +37,13 @@ fn main() {
     ROBOT_ONE_START_POS, ROBOT_ONE_ANG_ACCEL_RATE, ROBOT_ONE_ANG_VEL_CAP, ROBOT_ONE_ANG, 
     ROBOT_ONE_SUBSTATION_POS, ROBOT_ONE_TEAM, ROBOT_ONE_TIME_TO_PICK_UP, ROBOT_ONE_TIME_TO_PLACE_GROUND, 
     ROBOT_ONE_TIME_TO_PLACE_LOWER, ROBOT_ONE_TIME_TO_PLACE_MIDDLE, ROBOT_ONE_TIME_TO_PLACE_HIGH);
-    let robot_one = Robot::new(Box::new(strategy::move_to_closest), robot_one_inner);
+    let robot_one = Robot::new(Box::new(strategy::move_to_most_efficient), robot_one_inner);
 
     let robot_two_inner = RobotInner::new(ROBOT_TWO_ACCEL_RATE, ROBOT_TWO_VEL_CAP,
         ROBOT_TWO_START_POS, ROBOT_TWO_ANG_ACCEL_RATE, ROBOT_TWO_ANG_VEL_CAP, ROBOT_TWO_ANG, 
         ROBOT_TWO_SUBSTATION_POS, ROBOT_TWO_TEAM, ROBOT_TWO_TIME_TO_PICK_UP, ROBOT_TWO_TIME_TO_PLACE_GROUND, 
         ROBOT_TWO_TIME_TO_PLACE_LOWER, ROBOT_TWO_TIME_TO_PLACE_MIDDLE, ROBOT_TWO_TIME_TO_PLACE_HIGH);
-    let robot_two = Robot::new(Box::new(strategy::move_to_closest), robot_two_inner);
+    let robot_two = Robot::new(Box::new(strategy::move_to_most_efficient), robot_two_inner);
     let mut sim = Simulation::new_with_robots(GRID_SQUARE_SIZE, TIME_STEP, robot_one, robot_two);
     sim.run();
     println!("---------------------------------------");

@@ -44,7 +44,7 @@ pub fn move_to_most_efficient(r: &mut RobotInner, s: &mut SimState) -> Option<Bo
     //println!("Robot position, goal position and held item: {}, {:?}, {:?}",r.get_pos(), r.get_goal_pos(), r.get_item());
     if let None = r.get_item() {
         if s.can_give_cone(r) {
-            println!("Created an action to pick up a cone");
+            //println!("Created an action to pick up a cone");
             Some(Box::new(PickUpCone::new(r.get_time_pick_up())))
         }
         else {
