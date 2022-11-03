@@ -131,7 +131,7 @@ impl Simulation {
     }
     pub fn run(&mut self) {
         while self.state.time < 150.0 {
-            self.print_short();
+            //self.print_short();
             let before_driver = self.state.time < 30.0;
             self.step();
             self.state.time += self.state.time_step;
