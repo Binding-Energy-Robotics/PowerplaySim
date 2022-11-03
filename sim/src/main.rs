@@ -45,6 +45,7 @@ fn main() {
         ROBOT_TWO_TIME_TO_PLACE_LOWER, ROBOT_TWO_TIME_TO_PLACE_MIDDLE, ROBOT_TWO_TIME_TO_PLACE_HIGH);
     let robot_two = Robot::new(Box::new(strategy::move_to_closest), robot_two_inner);
     let mut sim = Simulation::new_with_robots(GRID_SQUARE_SIZE, TIME_STEP, robot_one, robot_two);
+    
     sim.run();
     println!("---------------------------------------");
     println!("Final junction state: {:#?}", sim.state().junctions);
@@ -52,4 +53,5 @@ fn main() {
     println!("Final scores:\n{} ({}g, {}l, {}m, {}h)\n  to\n{} ({}g, {}l, {}m, {}h)", 
         scores.0.0, scores.0.1.0, scores.0.1.1, scores.0.1.2, scores.0.1.3, 
         scores.1.0, scores.1.1.0, scores.1.1.1, scores.1.1.2, scores.1.1.3,);
+
 }
