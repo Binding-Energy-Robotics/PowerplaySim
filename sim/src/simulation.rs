@@ -64,19 +64,43 @@ impl SimState {
     pub fn junctions(&mut self) -> &mut Vec<Rc<Junction>> {
         &mut self.junctions
     }
-    pub fn closest_junction(&self, r: &RobotInner) -> Rc<Junction> {
-        Rc::clone(self.junctions.iter().filter(|j| match j.get_top_unmut() {
+    pub fn closest_junction(&self, r: &RobotInner) -> Option<Rc<Junction>> {
+        self.junctions.iter().filter(|j| match j.get_top_unmut() {
             None => true,
             Some(item) => item.team() != r.get_team(),
         }).min_by(|x, y| (x.get_pos().distance_from(r.get_pos()))
-        .partial_cmp(&y.get_pos().distance_from(r.get_pos())).unwrap()).unwrap())
+        .partial_cmp(&y.get_pos().distance_from(r.get_pos())).unwrap()).as_deref().cloned()
     }
-    pub fn most_efficient_junction(&self, r: &RobotInner) -> Rc<Junction> {
-        Rc::clone(self.junctions.iter().filter(|j| match j.get_top_unmut() {
+    pub fn closest_junction_ignoring<F>(&self, r: &RobotInner, mut f: F) -> Option<Rc<Junction>>
+    where   
+        F: FnMut(&&Rc<Junction>) -> bool,
+    {
+        self.junctions.iter().filter(|j| match j.get_top_unmut() {
+            None => true,
+            Some(item) => item.team() != r.get_team(),
+        })
+        .filter(|j| f(j))
+        .min_by(|x, y| (x.get_pos().distance_from(r.get_pos()))
+        .partial_cmp(&y.get_pos().distance_from(r.get_pos())).unwrap()).as_deref().cloned()
+    }
+    pub fn most_efficient_junction(&self, r: &RobotInner) -> Option<Rc<Junction>> {
+        self.junctions.iter().filter(|j| match j.get_top_unmut() {
             None => true,
             Some(item) => item.team() != r.get_team(),
         }).max_by(|x, y| (x.get_level().score() as f64 / x.get_pos().distance_from(r.get_pos()))
-        .partial_cmp(&(y.get_level().score() as f64 / y.get_pos().distance_from(r.get_pos()))).unwrap()).unwrap())
+        .partial_cmp(&(y.get_level().score() as f64 / y.get_pos().distance_from(r.get_pos()))).unwrap()).as_deref().cloned()
+    }
+    pub fn most_efficient_junction_ignoring<F>(&self, r: &RobotInner, mut f: F) -> Option<Rc<Junction>>
+    where   
+    F: FnMut(&&Rc<Junction>) -> bool,
+    {
+        self.junctions.iter().filter(|j| match j.get_top_unmut() {
+            None => true,
+            Some(item) => item.team() != r.get_team(),
+        })
+        .filter(|j| f(j))
+        .max_by(|x, y| (x.get_level().score() as f64 / x.get_pos().distance_from(r.get_pos()))
+        .partial_cmp(&(y.get_level().score() as f64 / y.get_pos().distance_from(r.get_pos()))).unwrap()).as_deref().cloned()
     }
 }
 
