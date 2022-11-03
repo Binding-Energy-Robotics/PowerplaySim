@@ -86,7 +86,8 @@ impl Junction {
 
 impl std::fmt::Display for Junction {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
-        write!(f, "Level: {:#?}, Top item: {:#?}, Capped: {}", self.level, self.items.back(), self.capped)
+        write!(f, "Level: {:?}, Top item: {:?}, Capped: {}, Num Items: {}", 
+        self.level, self.items.back(), self.capped, self.items.len())
     }
 }
 

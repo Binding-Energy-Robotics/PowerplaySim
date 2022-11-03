@@ -1,5 +1,6 @@
 #![feature(fn_traits)]
 #![feature(get_mut_unchecked)]
+#![feature(let_chains)]
 pub mod simulation;
 pub mod junction;
 pub mod robot;

@@ -59,11 +59,14 @@ impl SimState {
         &mut self.junctions
     }
     pub fn closest_junction(&self, r: &RobotInner) -> Rc<Junction> {
-        self.junctions.iter().filter(|j| match j.get_top_unmut() {
+        let junc = Rc::clone(self.junctions.iter().filter(|j| match j.get_top_unmut() {
             None => true,
             Some(item) => item.team() != r.get_team(),
         }).min_by(|x, y| (x.get_pos().distance_from(r.get_pos()))
-        .partial_cmp(&y.get_pos().distance_from(r.get_pos())).unwrap()).unwrap().clone()
+        .partial_cmp(&y.get_pos().distance_from(r.get_pos())).unwrap()).unwrap());
+        println!("Closest junction to robot at {} and {}: {} and item {:?}",
+        r.get_pos(), r.get_team(), junc.get_pos(), junc.get_top_unmut());
+        junc
     }
 }
 
