@@ -21,7 +21,7 @@ impl SimState {
                     for j in 1..6 {
                         let pos = Pos::new(i as f64 * grid_square_size, j as f64 * grid_square_size);
                         let level = {
-                            if (i & 2 == 1) && (j & 2 == 1) {
+                            if (i % 2 == 1) && (j % 2 == 1) {
                                 Level::Ground
                             }
                             else if (i == 1 || i == 5) && (j == 1 || j == 5) {
@@ -43,27 +43,32 @@ impl SimState {
         }
     }
     pub fn can_give_cone(&self, r: &RobotInner) -> bool {
-        r.get_pos().is_approx_eq(r.get_substation()) && match r.get_team() {
-            Team::TeamOne => self.num_team_one_cones > 0,
-            Team::TeamTwo => self.num_team_two_cones > 0,
-        }
+        r.get_pos().is_approx_eq(r.get_substation()) && self.has_cones_for(r.get_team())
     }
     pub fn can_place_item(&self, r: &RobotInner) -> (bool, Option<Rc<Junction>>) {
-        match self.junctions.iter().filter(|j| !j.is_capped()).filter(|j| j.get_pos().is_approx_eq(r.get_pos())).next() {
-            Some(j) => (r.get_item().is_some(), Some(Rc::clone(&j))),
+        match self.junctions.iter().filter(|j| !j.is_capped())
+            .filter(|j| j.get_top_unmut().is_none() || j.get_top_unmut().as_ref().unwrap().team() != r.get_team())
+            .filter(|j| j.get_pos().is_approx_eq(r.get_pos())).next() {
+            Some(j) => (true, Some(Rc::clone(&j))),
             None => (false, None)
         }
 
+    }
+    pub fn has_cones_for(&self, t: Team) -> bool {
+        match t {
+            Team::TeamOne => self.num_team_one_cones > 0,
+            Team::TeamTwo => self.num_team_two_cones > 0,
+        }
     }
     pub fn junctions(&mut self) -> &mut Vec<Rc<Junction>> {
         &mut self.junctions
     }
     pub fn closest_junction(&self, r: &RobotInner) -> Rc<Junction> {
-        self.junctions.iter().filter(|j| match j.get_top_unmut() {
+        Rc::clone(self.junctions.iter().filter(|j| match j.get_top_unmut() {
             None => true,
             Some(item) => item.team() != r.get_team(),
         }).min_by(|x, y| (x.get_pos().distance_from(r.get_pos()))
-        .partial_cmp(&y.get_pos().distance_from(r.get_pos())).unwrap()).unwrap().clone()
+        .partial_cmp(&y.get_pos().distance_from(r.get_pos())).unwrap()).unwrap())
     }
 }
 
@@ -123,9 +128,9 @@ impl Simulation {
             }
         }
     }
-    pub fn scores(&self) -> (u32, u32) {
+    pub fn scores(&self) -> ((u32, (u32, u32, u32, u32)), (u32, (u32, u32, u32, u32))) {
         // uhh idk scores just add
-        let folder = |acc: u32, e: &Rc<Junction>, team: Team| {
+        let folder = |acc: u32, e: &Rc<Junction>, team: Team, lev: Level, points: u32| {
             acc + if let Some(item) = e.get_top_unmut() {
                 match item {
                     &JunctionItem::Beacon(t) => {
@@ -136,16 +141,11 @@ impl Simulation {
                         }
                     },
                     &JunctionItem::Cone(t) => {
-                         if t == team {
-                            match e.get_level() {
-                                &Level::Ground => 2,
-                                &Level::Low => 3,
-                                &Level::Middle => 4,
-                                &Level::High => 5,
-                            }
-                         } else {
+                        if t == team && e.get_level() == &lev {
+                            points
+                        } else {
                             0
-                         }
+                        }
                     },
                 }
             }
@@ -153,8 +153,19 @@ impl Simulation {
                 0
             }
         };
-        (self.state.junctions.iter().fold(0,  |acc, e| folder(acc, e, Team::TeamOne)), 
-        self.state.junctions.iter().fold(0,  |acc, e| folder(acc, e, Team::TeamTwo)))
+        let t1_score_bdown = 
+            (self.state.junctions.iter().fold(0,  |acc, e| folder(acc, e, Team::TeamOne, Level::Ground, 2)),
+            self.state.junctions.iter().fold(0,  |acc, e| folder(acc, e, Team::TeamOne, Level::Low, 3)),
+            self.state.junctions.iter().fold(0,  |acc, e| folder(acc, e, Team::TeamOne, Level::Middle,4)),
+            self.state.junctions.iter().fold(0,  |acc, e| folder(acc, e, Team::TeamOne, Level::High, 5)));
+        let t2_score_bdown = 
+            (self.state.junctions.iter().fold(0,  |acc, e| folder(acc, e, Team::TeamTwo, Level::Ground, 2)),
+            self.state.junctions.iter().fold(0,  |acc, e| folder(acc, e, Team::TeamTwo, Level::Low, 3)),
+            self.state.junctions.iter().fold(0,  |acc, e| folder(acc, e, Team::TeamTwo, Level::Middle,4)),
+            self.state.junctions.iter().fold(0,  |acc, e| folder(acc, e, Team::TeamTwo, Level::High, 5)));
+
+        ((t1_score_bdown.0 + t1_score_bdown.1 + t1_score_bdown.2 + t1_score_bdown.3, t1_score_bdown), 
+        (t2_score_bdown.0 + t2_score_bdown.1 + t2_score_bdown.2 + t2_score_bdown.3, t2_score_bdown))
     }
     pub fn step(&mut self) {
         println!("-------------------");

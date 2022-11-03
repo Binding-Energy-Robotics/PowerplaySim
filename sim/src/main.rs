@@ -49,5 +49,7 @@ fn main() {
     println!("---------------------------------------");
     println!("Final junction state: {:#?}", sim.state().junctions);
     let scores = sim.scores();
-    println!("Final scores: {} to {}", scores.0, scores.1);
+    println!("Final scores:\n{} ({}g, {}l, {}m, {}h)\n  to\n{} ({}g, {}l, {}m, {}h)", 
+        scores.0.0, scores.0.1.0, scores.0.1.1, scores.0.1.2, scores.0.1.3, 
+        scores.1.0, scores.1.1.0, scores.1.1.1, scores.1.1.2, scores.1.1.3,);
 }

@@ -13,9 +13,13 @@ pub fn move_to_closest(r: &mut RobotInner, s: &mut SimState) -> Option<Box<dyn A
             Some(Box::new(PickUpCone::new(r.get_time_pick_up())))
         }
         else {
-            println!("Set goal to move to the substation");
-            r.set_goal_pos(r.get_substation());
-            r.set_goal_angle(if r.get_substation().x < 3.0 {std::f64::consts::PI} else {0.0});
+            if s.has_cones_for(r.get_team()) {
+                println!("Set goal to move to the substation");
+                r.set_goal_pos(r.get_substation());
+                r.set_goal_angle(if r.get_substation().x < 3.0 {std::f64::consts::PI} else {0.0});
+            } else {
+                r.clear_goal();
+            }
             None
         }   
     }
