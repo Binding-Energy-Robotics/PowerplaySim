@@ -43,7 +43,7 @@ fn main() {
         ROBOT_TWO_START_POS, ROBOT_TWO_ANG_ACCEL_RATE, ROBOT_TWO_ANG_VEL_CAP, ROBOT_TWO_ANG, 
         ROBOT_TWO_SUBSTATION_POS, ROBOT_TWO_TEAM, ROBOT_TWO_TIME_TO_PICK_UP, ROBOT_TWO_TIME_TO_PLACE_GROUND, 
         ROBOT_TWO_TIME_TO_PLACE_LOWER, ROBOT_TWO_TIME_TO_PLACE_MIDDLE, ROBOT_TWO_TIME_TO_PLACE_HIGH);
-    let robot_two = Robot::new(Box::new(strategy::move_to_zero), robot_two_inner);
+    let robot_two = Robot::new(Box::new(strategy::move_to_closest), robot_two_inner);
     let mut sim = Simulation::new_with_robots(GRID_SQUARE_SIZE, TIME_STEP, robot_one, robot_two);
     sim.run();
     println!("---------------------------------------");
