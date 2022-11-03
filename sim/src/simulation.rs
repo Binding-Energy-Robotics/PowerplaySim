@@ -12,7 +12,6 @@ pub struct SimState {
     pub num_team_one_cones: i8,
     pub num_team_two_cones: i8,
 }
-
 impl SimState {
     pub fn new(grid_square_size: f64, time_step: f64) -> SimState {
         SimState {
@@ -26,10 +25,10 @@ impl SimState {
                             if (i % 2 == 1) && (j % 2 == 1) {
                                 Level::Ground
                             }
-                            else if (i == 1 || i == 5) && (j == 1 || j == 5) {
+                            else if (i == 1 || i == 5) || (j == 1 || j == 5) {
                                 Level::Low
                             }
-                            else if (i & 2 == 0) && (j & 2 == 0) {
+                            else if (i % 2 == 0) && (j % 2 == 0) {
                                 Level::Middle
                             }
                             else {
@@ -120,11 +119,15 @@ impl Simulation {
             scores: ((0, (0,0,0,0)),(0, (0,0,0,0)))}
     }
     pub fn print_short(&self) {
-        println!("robot one angle and position: {} @ {}, robot two angle and position: {} @ {},
-        num cones: {}, {}", 
+        println!("--------------------------------------");
+        println!("robot one angle, position, goal, and held item: {} @ {}, {:?} , {:?}", 
         self.robot_one.inner.get_angle(), self.robot_one.inner.get_pos(), 
-        self.robot_two.inner.get_angle(), self.robot_two.inner.get_pos(),
-        self.state.num_team_one_cones, self.state.num_team_two_cones);
+        self.robot_one.inner.get_goal_pos(), self.robot_one.inner.get_item());
+        println!("robot two angle, position, goal, and held item: {} @ {}, {:?} , {:?}", 
+        self.robot_two.inner.get_angle(), self.robot_two.inner.get_pos(), 
+        self.robot_two.inner.get_goal_pos(), self.robot_two.inner.get_item());
+        let scores = self.scores();
+        println!("Current score: {} to {}", scores.0.0, scores.1.0);
         //println!("Robot one: {}", self.robot_one);
     }
     pub fn run(&mut self) {
