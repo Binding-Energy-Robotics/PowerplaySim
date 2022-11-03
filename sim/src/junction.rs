@@ -10,6 +10,17 @@ pub enum Level {
     High
 }
 
+impl Level {
+    pub fn score(&self) -> u32 {
+        match self {
+            Level::Ground => 2,
+            Level::Low => 3,
+            Level::Middle => 4,
+            Level::High => 5,
+        }
+    }
+}
+
 #[derive(Debug)]
 pub enum JunctionItem {
     Cone(Team),

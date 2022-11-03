@@ -2,6 +2,8 @@ use std::rc::Rc;
 
 use crate::{junction::{Junction, Level, JunctionItem}, robot::{Robot, RobotInner}, pos::Pos, action::Action, team::Team};
 
+use rand::prelude::*;
+
 pub struct SimState {
     pub grid_square_size: f64,
     pub time_step: f64,
@@ -70,6 +72,13 @@ impl SimState {
         }).min_by(|x, y| (x.get_pos().distance_from(r.get_pos()))
         .partial_cmp(&y.get_pos().distance_from(r.get_pos())).unwrap()).unwrap())
     }
+    pub fn most_efficient_junction(&self, r: &RobotInner) -> Rc<Junction> {
+        Rc::clone(self.junctions.iter().filter(|j| match j.get_top_unmut() {
+            None => true,
+            Some(item) => item.team() != r.get_team(),
+        }).max_by(|x, y| (x.get_level().score() as f64 / x.get_pos().distance_from(r.get_pos()))
+        .partial_cmp(&(y.get_level().score() as f64 / y.get_pos().distance_from(r.get_pos()))).unwrap()).unwrap())
+    }
 }
 
 impl std::fmt::Display for SimState {
@@ -87,6 +96,7 @@ pub struct Simulation {
     robot_one: Robot,
     robot_two: Robot,
     state: SimState,
+    rand: ThreadRng,
     scores: (u32, u32),
 }
 
@@ -103,10 +113,10 @@ impl Simulation {
             robot_two: Robot::new(r2s, RobotInner::new(r2ar, r2vc, Pos::new(3.0 * grid_square_size, 6.0 * grid_square_size), 
             r2aar, r2avc, std::f64::consts::PI, Pos::new(3.0 * grid_square_size, 6.0 * grid_square_size), Team::TeamTwo, 
             r2ttpu, r2ttpg, r2ttpl, r2ttpm, r2ttph)), 
-            state: SimState::new(grid_square_size, time_step), scores: (0,0)}
+            state: SimState::new(grid_square_size, time_step), rand: thread_rng(), scores: (0,0)}
     }
     pub fn new_with_robots(grid_square_size: f64, time_step: f64, one: Robot, two: Robot) -> Simulation {
-        Simulation { robot_one: one, robot_two: two, state: SimState::new(grid_square_size, time_step), scores: (0,0)}
+        Simulation { robot_one: one, robot_two: two, state: SimState::new(grid_square_size, time_step), rand: thread_rng(), scores: (0,0)}
     }
     pub fn print_short(&self) {
         println!("robot one angle and position: {} @ {}, robot two angle and position: {} @ {},
@@ -168,7 +178,7 @@ impl Simulation {
         (t2_score_bdown.0 + t2_score_bdown.1 + t2_score_bdown.2 + t2_score_bdown.3, t2_score_bdown))
     }
     pub fn step(&mut self) {
-        println!("-------------------");
+        //println!("-------------------");
         let mut step_robot = | r: &mut Robot | {
             if let None = r.action {
                 let a = (r.strat)(&mut r.inner, &mut self.state);
@@ -180,9 +190,9 @@ impl Simulation {
                     r.inner.r#move(self.state.time_step);
                 },
                 Some(_a) => {
-                    println!("Robot current action: {}", _a);
+                    //println!("Robot current action: {}", _a);
                     if _a.update_time_left(self.state.time_step) {
-                        println!("Fufilling robot action");
+                        //println!("Fufilling robot action");
                         let a = r.action.take().unwrap();
                         a.do_action(&mut r.inner, &mut self.state);
                         // Now that we don't have an action, we will have to decide a movement on the next step. 
@@ -192,8 +202,13 @@ impl Simulation {
                 }
             }
         };
-        step_robot(&mut self.robot_one);
-        step_robot(&mut self.robot_two);
+        if self.rand.gen() {
+            step_robot(&mut self.robot_one);
+            step_robot(&mut self.robot_two);
+        } else {    
+            step_robot(&mut self.robot_two);
+            step_robot(&mut self.robot_one);
+        }
     }
     pub fn state(&self) -> &SimState {
         &self.state
