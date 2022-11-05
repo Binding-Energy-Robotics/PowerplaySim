@@ -48,11 +48,11 @@ impl SimState {
     }
     pub fn can_place_item(&self, r: &RobotInner) -> (bool, Option<Rc<Junction>>) {
         match self.junctions.iter().filter(|j| !j.is_capped())
-            .filter(|j| j.get_top_unmut().is_none() || j.get_top_unmut().as_ref().unwrap().team() != r.get_team())
             .filter(|j| j.get_pos().is_approx_eq(r.get_pos())).next() {
-            Some(j) => (true, Some(Rc::clone(&j))),
+            Some(j) => (r.get_goal_pos().is_some() &&  
+                r.get_pos().is_approx_eq(r.get_goal_pos().unwrap()), Some(Rc::clone(&j))),
             None => (false, None)
-        }
+        } 
 
     }
     pub fn has_cones_for(&self, t: Team) -> bool {
@@ -65,42 +65,32 @@ impl SimState {
         &mut self.junctions
     }
     pub fn closest_junction(&self, r: &RobotInner) -> Option<Rc<Junction>> {
-        self.junctions.iter().filter(|j| match j.get_top_unmut() {
-            None => true,
-            Some(item) => item.team() != r.get_team(),
-        }).min_by(|x, y| (x.get_pos().distance_from(r.get_pos()))
-        .partial_cmp(&y.get_pos().distance_from(r.get_pos())).unwrap()).as_deref().cloned()
+        self.junctions.iter()
+        .min_by(|x, y| (x.get_pos().distance_from(r.get_pos()).abs())
+        .partial_cmp(&y.get_pos().distance_from(r.get_pos()).abs()).unwrap()).as_deref().cloned()
     }
     pub fn closest_junction_ignoring<F>(&self, r: &RobotInner, mut f: F) -> Option<Rc<Junction>>
     where   
         F: FnMut(&&Rc<Junction>) -> bool,
     {
-        self.junctions.iter().filter(|j| match j.get_top_unmut() {
-            None => true,
-            Some(item) => item.team() != r.get_team(),
-        })
+        self.junctions.iter()
         .filter(|j| f(j))
-        .min_by(|x, y| (x.get_pos().distance_from(r.get_pos()))
-        .partial_cmp(&y.get_pos().distance_from(r.get_pos())).unwrap()).as_deref().cloned()
+        .min_by(|x, y| (x.get_pos().distance_from(r.get_pos()).abs())
+        .partial_cmp(&y.get_pos().distance_from(r.get_pos()).abs()).unwrap()).as_deref().cloned()
     }
     pub fn most_efficient_junction(&self, r: &RobotInner) -> Option<Rc<Junction>> {
-        self.junctions.iter().filter(|j| match j.get_top_unmut() {
-            None => true,
-            Some(item) => item.team() != r.get_team(),
-        }).max_by(|x, y| (x.get_level().score() as f64 / x.get_pos().distance_from(r.get_pos()))
-        .partial_cmp(&(y.get_level().score() as f64 / y.get_pos().distance_from(r.get_pos()))).unwrap()).as_deref().cloned()
+        self.junctions.iter()
+        .max_by(|x, y| (x.get_level().score() as f64 / x.get_pos().distance_from(r.get_pos()).abs())
+        .partial_cmp(&(y.get_level().score() as f64 / y.get_pos().distance_from(r.get_pos()).abs())).unwrap()).as_deref().cloned()
     }
     pub fn most_efficient_junction_ignoring<F>(&self, r: &RobotInner, mut f: F) -> Option<Rc<Junction>>
     where   
     F: FnMut(&&Rc<Junction>) -> bool,
     {
-        self.junctions.iter().filter(|j| match j.get_top_unmut() {
-            None => true,
-            Some(item) => item.team() != r.get_team(),
-        })
+        self.junctions.iter()
         .filter(|j| f(j))
-        .max_by(|x, y| (x.get_level().score() as f64 / x.get_pos().distance_from(r.get_pos()))
-        .partial_cmp(&(y.get_level().score() as f64 / y.get_pos().distance_from(r.get_pos()))).unwrap()).as_deref().cloned()
+        .max_by(|x, y| (x.get_level().score() as f64 / x.get_pos().distance_from(r.get_pos()).abs())
+        .partial_cmp(&(y.get_level().score() as f64 / y.get_pos().distance_from(r.get_pos()).abs())).unwrap()).as_deref().cloned()
     }
 }
 
@@ -156,7 +146,7 @@ impl Simulation {
     }
     pub fn run(&mut self) {
         while self.state.time < 150.0 {
-            //self.print_short();
+            self.print_short();
             let before_driver = self.state.time < 30.0;
             self.step();
             self.state.time += self.state.time_step;
@@ -174,27 +164,22 @@ impl Simulation {
         */
     }
     pub fn scores(&self) -> ((u32, (u32, u32, u32, u32)), (u32, (u32, u32, u32, u32))) {
-        // uhh idk scores just add
-        let folder = |acc: u32, e: &Rc<Junction>, team: Team, lev: Level, points: u32| {
-            acc + if let Some(item) = e.get_top_unmut() {
-                match item {
-                    &JunctionItem::Beacon(t) => {
-                        if t == team {
-                            10 // I think?
-                        } else {
-                            0
-                        }
-                    },
-                    &JunctionItem::Cone(t) => {
-                        if t == team && e.get_level() == &lev {
-                            points
-                        } else {
-                            0
-                        }
-                    },
-                }
+
+        let folder_junc = |acc: u32, item: &JunctionItem,
+            team: &Team, points: u32| 
+        {
+            acc + if let JunctionItem::Cone(t) = item && t == team {
+                points
+            } else {
+                0
             }
-            else {
+        };
+        
+        let folder = |acc: u32, e: &Rc<Junction>, team: Team, lev: Level, points: u32| {
+            acc + if e.get_level() == &lev {
+                e.get_items().iter().fold(0, |acc, it| folder_junc(acc, it, 
+                    &team, points))
+            } else {
                 0
             }
         };

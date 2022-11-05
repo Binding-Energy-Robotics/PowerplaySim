@@ -43,6 +43,14 @@ impl RobotInner {
         self.goal_angle = None;
     }
     pub fn r#move(&mut self, timestep: f64) {
+        // This stops us from panic!ing if we don't have a goal
+        if self.goal_angle.is_none() && self.goal_pos.is_none() {
+            return;
+        }
+        else if self.goal_angle.is_none() || self.goal_pos.is_none() {
+            panic!("One of goal angle, goal pos is none but the other is not");
+        }
+
         // For now we don't actually care about acceleration
         // This is just a hack until we implement acceleration.
         self.velocity = self.vel_cap;

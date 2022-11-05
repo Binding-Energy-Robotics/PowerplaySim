@@ -38,7 +38,7 @@ pub fn fn_name<T>(_ : &T) -> &'static str {
 
 fn main() {
     let r1_strat = strategy::move_to_most_efficient;
-    let r2_strat = strategy::move_to_most_efficient;
+    let r2_strat = strategy::move_to_most_efficient_ignore_high;
 
     let robot_one_inner = RobotInner::new(ROBOT_ONE_ACCEL_RATE, ROBOT_ONE_VEL_CAP,
     ROBOT_ONE_START_POS, ROBOT_ONE_ANG_ACCEL_RATE, ROBOT_ONE_ANG_VEL_CAP, ROBOT_ONE_ANG, 

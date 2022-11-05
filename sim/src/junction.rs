@@ -46,7 +46,7 @@ impl JunctionItem {
 }
 
 pub struct Junction {
-    item: Option<JunctionItem>,
+    items: Vec<JunctionItem>,
     pos: Pos,
     level: Level,
     capped: bool,
@@ -54,13 +54,13 @@ pub struct Junction {
 
 impl Junction {
     pub fn new(p: Pos, l: Level) -> Junction {
-        Junction { item: None, pos: p, level: l, capped: false }
+        Junction { items: Vec::new(), pos: p, level: l, capped: false }
     }
     pub fn get_top(&mut self) -> Option<&mut JunctionItem> {
-        self.item.as_mut()
+        self.items.last_mut()
     }
     pub fn get_top_unmut(&self) -> Option<&JunctionItem> {
-        self.item.as_ref()
+        self.items.last()
     }
     pub fn add_item(&mut self, j: JunctionItem) -> bool {
         if self.capped {
@@ -69,7 +69,7 @@ impl Junction {
         if let JunctionItem::Beacon(_) = j {
             self.capped = true;
         }
-        self.item = Some(j);
+        self.items.push(j);
         true
     }
     pub fn get_pos(&self) -> &Pos {
@@ -81,12 +81,15 @@ impl Junction {
     pub fn is_capped(&self) -> bool {
         self.capped
     }
+    pub fn get_items(&self) -> &Vec<JunctionItem> {
+        &self.items
+    }
 }
 
 impl std::fmt::Display for Junction {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         write!(f, "Level: {:?}, Top item: {:?}, Capped: {}. Pos: {}", 
-        self.level, self.item, self.capped, self.pos)
+        self.level, self.items.last(), self.capped, self.pos)
     }
 }
 
